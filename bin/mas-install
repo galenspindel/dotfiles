@@ -1,0 +1,195 @@
+#!/bin/bash
+#
+# mas-install
+#
+# Manages App Store apps installation and updates using a data structure
+
+set -e
+
+# Data structure: Two parallel arrays for app_id and app_name
+APP_IDS=(
+    "1206020918"
+    "1632827132"
+    "1470584107"
+    "441258766"
+    "1596706466"
+)
+
+APP_NAMES=(
+    "Battery Indicator"
+    "Camera Preview"
+    "Dato"
+    "Magnet"
+    "Speediness"
+)
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Helper functions
+log_info() {
+    echo -e "${BLUE}ℹ${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}✗${NC} $1"
+}
+
+# Check if mas is installed
+check_mas() {
+    if ! command -v mas &> /dev/null; then
+        log_error "mas is not installed. Please install it first:"
+        echo "  brew install mas"
+        exit 1
+    fi
+}
+
+# Check if user is signed in to App Store
+check_app_store_signin() {
+    if ! mas list &> /dev/null; then
+        log_error "Not signed in to App Store. Please sign in first via the App Store app."
+        exit 1
+    fi
+}
+
+# Check if app is installed
+is_app_installed() {
+    local app_id=$1
+    mas list | grep -q "^$app_id "
+}
+
+# Check if app needs update
+app_needs_update() {
+    local app_id=$1
+    mas outdated | grep -q "^$app_id "
+}
+
+# Install app
+install_app() {
+    local app_id=$1
+    local app_name=$2
+    
+    log_info "Installing $app_name ($app_id)..."
+    if mas install "$app_id"; then
+        log_success "Installed $app_name"
+    else
+        log_error "Failed to install $app_name"
+        return 1
+    fi
+}
+
+# Update app
+update_app() {
+    local app_id=$1
+    local app_name=$2
+    
+    log_info "Updating $app_name ($app_id)..."
+    if mas upgrade "$app_id"; then
+        log_success "Updated $app_name"
+    else
+        log_error "Failed to update $app_name"
+        return 1
+    fi
+}
+
+# Main function to process all apps
+process_apps() {
+    local action=$1
+    
+    case $action in
+        "install")
+            log_info "Installing missing App Store apps..."
+            for i in "${!APP_IDS[@]}"; do
+                app_id="${APP_IDS[$i]}"
+                app_name="${APP_NAMES[$i]}"
+                if is_app_installed "$app_id"; then
+                    log_info "Skipping $app_name (already installed)"
+                else
+                    install_app "$app_id" "$app_name"
+                fi
+            done
+            ;;
+        "update")
+            log_info "Updating App Store apps..."
+            for i in "${!APP_IDS[@]}"; do
+                app_id="${APP_IDS[$i]}"
+                app_name="${APP_NAMES[$i]}"
+                if is_app_installed "$app_id"; then
+                    if app_needs_update "$app_id"; then
+                        update_app "$app_id" "$app_name"
+                    else
+                        log_info "Skipping $app_name (up to date)"
+                    fi
+                else
+                    log_warning "Skipping $app_name (not installed)"
+                fi
+            done
+            ;;
+        "sync")
+            log_info "Syncing App Store apps (install missing + update existing)..."
+            for i in "${!APP_IDS[@]}"; do
+                app_id="${APP_IDS[$i]}"
+                app_name="${APP_NAMES[$i]}"
+                if is_app_installed "$app_id"; then
+                    if app_needs_update "$app_id"; then
+                        update_app "$app_id" "$app_name"
+                    else
+                        log_info "Skipping $app_name (up to date)"
+                    fi
+                else
+                    install_app "$app_id" "$app_name"
+                fi
+            done
+            ;;
+        "list")
+            log_info "App Store apps in data structure:"
+            for i in "${!APP_IDS[@]}"; do
+                app_id="${APP_IDS[$i]}"
+                app_name="${APP_NAMES[$i]}"
+                status=""
+                if is_app_installed "$app_id"; then
+                    if app_needs_update "$app_id"; then
+                        status=" (installed, needs update)"
+                    else
+                        status=" (installed, up to date)"
+                    fi
+                else
+                    status=" (not installed)"
+                fi
+                echo "  $app_id: $app_name$status"
+            done
+            ;;
+        *)
+            echo "Usage: $0 {install|update|sync|list}"
+            echo ""
+            echo "Commands:"
+            echo "  install  - Install missing apps"
+            echo "  update   - Update existing apps"
+            echo "  sync     - Install missing and update existing"
+            echo "  list     - List all apps and their status"
+            exit 1
+            ;;
+    esac
+}
+
+# Main execution
+main() {
+    check_mas
+    check_app_store_signin
+    process_apps "$1"
+}
+
+# Run main function with first argument
+main "$1" 
