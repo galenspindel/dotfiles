@@ -13,7 +13,6 @@
         ui = true
 [core]
         excludesfile = ~/.gitignore
-        editor = cursor
 [apply]
         whitespace = fix
 [difftool]
