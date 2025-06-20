@@ -16,6 +16,8 @@ git clone https://github.com/holman/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 script/bootstrap
 ```
+- Enable FiraCode Nerd Font in iTerm2 `Prefernces -> Profiles -> Text`
+- Enable FiraCode Nerd Font in Cursor
 
 ## Occasional Refresh
 This will symlink the appropriate files in `.dotfiles` to your home directory.
