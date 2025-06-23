@@ -1,0 +1,11 @@
+{
+    "window.commandCenter": true,
+    "workbench.colorTheme": "Cursor Dark Midnight",
+    "files.autoSave": "onFocusChange",
+    "explorer.confirmDelete": false,
+    "editor.fontFamily": "FiraCode Nerd Font, Menlo, Monaco, 'Courier New', monospace",
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.integrated.env.osx": {
+        "PATH": "${env:PATH}:${env:HOME}/.asdf/shims"
+    }
+}

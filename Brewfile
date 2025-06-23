@@ -11,8 +11,6 @@ brew 'mas' # mac app store
 brew 'starship'
 brew 'yarn' # package manager
 
-brew tap homebrew/cask-fonts
-brew install --cask font-fira-code-nerd-font
 
 # Uncomment upon initial setup
 # cask '1password'
@@ -21,6 +19,7 @@ brew install --cask font-fira-code-nerd-font
 # cask 'cursor'
 # cask 'docker'
 # cask 'firefox'
+# cask 'font-fira-code-nerd-font'
 # cask 'google-drive'
 # cask 'granola'
 # cask 'iterm2'
