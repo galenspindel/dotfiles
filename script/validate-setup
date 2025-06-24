@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+#
+# validate-setup
+#
+# Validates that dotfiles setup completed successfully
+
+set -e
+
+cd "$(dirname "$0")/.."
+DOTFILES_ROOT=$(pwd -P)
+
+# Color output functions
+info () {
+  printf "\r  [ \033[00;34m..\033[0m ] $1\n"
+}
+
+success () {
+  printf "\r\033[2K  [ \033[00;32mOK\033[0m ] $1\n"
+}
+
+warn () {
+  printf "\r\033[2K  [ \033[0;33mWARN\033[0m ] $1\n"
+}
+
+fail () {
+  printf "\r\033[2K  [\033[0;31mFAIL\033[0m] $1\n"
+}
+
+# Validation counters
+validation_errors=0
+validation_warnings=0
+
+check_failed() {
+  ((validation_errors++))
+  fail "$1"
+}
+
+check_warning() {
+  ((validation_warnings++))
+  warn "$1"
+}
+
+# Check if symlinks were created correctly
+validate_symlinks() {
+  info 'Validating dotfiles symlinks'
+  
+  local symlink_count=0
+  local broken_count=0
+  
+  for src in $(find -H "$DOTFILES_ROOT" -maxdepth 2 -name '*.symlink' -not -path '*.git*' 2>/dev/null); do
+    dst="$HOME/.$(basename "${src%.*}")"
+    
+    if [ -L "$dst" ]; then
+      if [ -f "$dst" ] || [ -d "$dst" ]; then
+        ((symlink_count++))
+      else
+        ((broken_count++))
+        check_failed "Broken symlink: $dst"
+      fi
+    else
+      check_failed "Missing symlink: $dst"
+    fi
+  done
+  
+  if [ $broken_count -eq 0 ] && [ $symlink_count -gt 0 ]; then
+    success "All $symlink_count symlinks working correctly"
+  fi
+}
+
+# Check if Homebrew is properly installed
+validate_homebrew() {
+  info 'Validating Homebrew installation'
+  
+  if command -v brew >/dev/null 2>&1; then
+    success "Homebrew installed: $(brew --version | head -n1)"
+    
+    # Check if Homebrew paths are in PATH
+    brew_prefix="$(brew --prefix)"
+    if echo "$PATH" | grep -q "$brew_prefix/bin"; then
+      success "Homebrew paths in PATH"
+    else
+      check_warning "Homebrew paths not found in PATH"
+    fi
+  else
+    check_failed "Homebrew not installed or not in PATH"
+  fi
+}
+
+# Check if asdf is working
+validate_asdf() {
+  info 'Validating asdf installation'
+  
+  if command -v asdf >/dev/null 2>&1; then
+    success "asdf installed: $(asdf --version)"
+    
+    # Check if plugins are installed
+    local plugins=(nodejs ruby)
+    for plugin in "${plugins[@]}"; do
+      if asdf plugin list | grep -q "^$plugin$"; then
+        success "asdf plugin installed: $plugin"
+      else
+        check_warning "asdf plugin not installed: $plugin"
+      fi
+    done
+  else
+    check_warning "asdf not installed or not in PATH"
+  fi
+}
+
+# Check if git configuration is set up
+validate_git() {
+  info 'Validating git configuration'
+  
+  if command -v git >/dev/null 2>&1; then
+    local git_name=$(git config --global user.name 2>/dev/null)
+    local git_email=$(git config --global user.email 2>/dev/null)
+    
+    if [ -n "$git_name" ] && [ -n "$git_email" ]; then
+      success "Git configured: $git_name <$git_email>"
+    else
+      check_failed "Git user configuration missing"
+    fi
+    
+    # Check credential helper
+    local git_helper=$(git config --global credential.helper 2>/dev/null)
+    if [ -n "$git_helper" ]; then
+      success "Git credential helper: $git_helper"
+    else
+      check_warning "Git credential helper not configured"
+    fi
+  else
+    check_failed "Git not available"
+  fi
+}
+
+# Check if shell configuration is loaded
+validate_shell() {
+  info 'Validating shell configuration'
+  
+  # Check if ZSH variable is set
+  if [ -n "$ZSH" ]; then
+    success "ZSH environment variable set: $ZSH"
+  else
+    check_warning "ZSH environment variable not set"
+  fi
+  
+  # Check if starship is available
+  if command -v starship >/dev/null 2>&1; then
+    success "Starship prompt available"
+  else
+    check_warning "Starship prompt not available"
+  fi
+}
+
+# Check mas and App Store apps
+validate_mas() {
+  info 'Validating mas and App Store apps'
+  
+  if command -v mas >/dev/null 2>&1; then
+    success "mas installed"
+    
+    if mas account >/dev/null 2>&1; then
+      success "Signed into App Store"
+    else
+      check_warning "Not signed into App Store"
+    fi
+  else
+    check_warning "mas not installed"
+  fi
+}
+
+# Generate validation report
+generate_report() {
+  echo ''
+  echo '============================================'
+  echo '           VALIDATION REPORT'
+  echo '============================================'
+  
+  if [ $validation_errors -eq 0 ] && [ $validation_warnings -eq 0 ]; then
+    success 'All validations passed! Your dotfiles setup is working perfectly.'
+  elif [ $validation_errors -eq 0 ]; then
+    warn "Setup mostly successful with $validation_warnings warnings."
+    echo "   Warnings don't prevent functionality but should be addressed."
+  else
+    fail "Setup has $validation_errors errors and $validation_warnings warnings."
+    echo "   Please fix the errors above for full functionality."
+  fi
+  
+  echo ''
+  echo 'Next steps:'
+  if [ $validation_errors -gt 0 ]; then
+    echo '  1. Fix the validation errors above'
+    echo '  2. Run this script again to re-validate'
+  else
+    echo '  1. Restart your terminal or run: source ~/.zshrc'
+    echo '  2. Test your new setup'
+  fi
+  echo '  3. Run "dot" periodically to keep everything updated'
+  echo ''
+}
+
+# Main execution
+main() {
+  echo ''
+  echo 'Validating dotfiles setup...'
+  echo ''
+  
+  validate_symlinks
+  validate_homebrew
+  validate_asdf
+  validate_git
+  validate_shell
+  validate_mas
+  
+  generate_report
+  
+  # Exit with appropriate code
+  if [ $validation_errors -gt 0 ]; then
+    exit 1
+  else
+    exit 0
+  fi
+}
+
+main "$@"

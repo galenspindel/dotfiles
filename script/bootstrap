@@ -7,6 +7,14 @@ DOTFILES_ROOT=$(pwd -P)
 
 set -e
 
+# Run prerequisites check first
+if [ -f "$DOTFILES_ROOT/script/check-prerequisites" ]; then
+  echo "Running prerequisites check..."
+  "$DOTFILES_ROOT/script/check-prerequisites"
+else
+  echo "Warning: Prerequisites check not found, proceeding anyway..."
+fi
+
 echo ''
 
 info () {
@@ -24,7 +32,9 @@ success () {
 fail () {
   printf "\r\033[2K  [\033[0;31mFAIL\033[0m] $1\n"
   echo ''
-  exit
+  echo "Bootstrap failed. Check the error above and try again."
+  echo "If you need help, check the README or create a backup first."
+  exit 1
 }
 
 setup_gitconfig () {
@@ -32,20 +42,43 @@ setup_gitconfig () {
   then
     info 'setup gitconfig'
 
+    # Check if example file exists
+    if [ ! -f git/gitconfig.local.symlink.example ]; then
+      fail "git/gitconfig.local.symlink.example not found"
+    fi
+
     git_credential='cache'
     if [ "$(uname -s)" == "Darwin" ]
     then
       git_credential='osxkeychain'
     fi
 
-    user ' - What is your github author name?'
-    read -e git_authorname
-    user ' - What is your github author email?'
-    read -e git_authoremail
+    # Get user input with validation
+    while [ -z "$git_authorname" ]; do
+      user ' - What is your github author name?'
+      read -e git_authorname
+      if [ -z "$git_authorname" ]; then
+        echo "   Author name cannot be empty. Please try again."
+      fi
+    done
 
-    sed -e "s/AUTHORNAME/$git_authorname/g" -e "s/AUTHOREMAIL/$git_authoremail/g" -e "s/GIT_CREDENTIAL_HELPER/$git_credential/g" git/gitconfig.local.symlink.example > git/gitconfig.local.symlink
+    while [ -z "$git_authoremail" ]; do
+      user ' - What is your github author email?'
+      read -e git_authoremail
+      if [ -z "$git_authoremail" ]; then
+        echo "   Email cannot be empty. Please try again."
+      elif ! echo "$git_authoremail" | grep -E '^[^@]+@[^@]+\.[^@]+$' >/dev/null; then
+        echo "   Please enter a valid email address."
+        git_authoremail=""
+      fi
+    done
 
-    success 'gitconfig'
+    # Create the config file
+    if sed -e "s/AUTHORNAME/$git_authorname/g" -e "s/AUTHOREMAIL/$git_authoremail/g" -e "s/GIT_CREDENTIAL_HELPER/$git_credential/g" git/gitconfig.local.symlink.example > git/gitconfig.local.symlink; then
+      success 'gitconfig'
+    else
+      fail 'Failed to create git configuration'
+    fi
   fi
 }
 
@@ -120,8 +153,11 @@ link_file () {
 
   if [ "$skip" != "true" ]  # "false" or empty
   then
-    ln -s "$1" "$2"
-    success "linked $1 to $2"
+    if ln -s "$1" "$2" 2>/dev/null; then
+      success "linked $1 to $2"
+    else
+      fail "failed to link $1 to $2"
+    fi
   fi
 }
 
@@ -144,11 +180,15 @@ install_dotfiles
 if [ "$(uname -s)" == "Darwin" ]
 then
   info "installing dependencies"
+  if [ ! -f "bin/dot" ]; then
+    fail "bin/dot script not found"
+  fi
+  
   if source bin/dot | while read -r data; do info "$data"; done
   then
     success "dependencies installed"
   else
-    fail "error installing dependencies"
+    fail "error installing dependencies - check output above for details"
   fi
 fi
 

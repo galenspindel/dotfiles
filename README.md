@@ -8,28 +8,97 @@ Should be able to set up a brand new machine from scratch (mostly)
 - Make sure you're logged into the App Store
 - Install xcode `xcode-select --install`
 - Install homebrew `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-- Check `zsh/zshrc.symlink`, to make sure the paths are correct for this new maching.
+- Check `zsh/zshrc.symlink`, to make sure the paths are correct for this new machine
 
-Then run this:
+### Unified Setup (Recommended)
 ```sh
 git clone https://github.com/holman/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-script/bootstrap
+
+# Interactive setup (asks about each component)
+./setup.sh
+
+# OR: Minimal setup (just dotfiles, no software)
+./setup.sh --minimal
+
+# OR: Complete automated setup
+./setup.sh --full --force
+
+# OR: Install applications only
+./setup.sh --apps
+
+# Preview changes without applying
+./setup.sh --dry-run
 ```
-- Enable FiraCode Nerd Font in iTerm2 `Prefernces -> Profiles -> Text`
+
+### Manual Setup (Legacy)
+```sh
+# Optional: Check prerequisites first
+script/check-prerequisites
+
+# Run the main setup
+script/bootstrap
+
+# Optional: Validate everything worked
+script/validate-setup
+```
+
+### Post-Setup
+- Enable FiraCode Nerd Font in iTerm2 `Preferences -> Profiles -> Text`
 - Enable FiraCode Nerd Font in Cursor
 
-## Occasional Refresh
+### Troubleshooting
+If something goes wrong:
+- Run `script/check-prerequisites` to verify your system
+- Run `script/validate-setup` to check what's broken
+- Run `script/restore-backup` to undo changes if needed
+
+## Keeping Things Updated
+
+### Using the Enhanced `dot` Command
+The `dot` command has been enhanced with subcommands for targeted updates:
+
+```sh
+# Update everything (default)
+dot
+
+# Update applications only (casks + App Store)
+dot apps
+
+# Update development tools only
+dot dev
+
+# Check system status and validate setup
+dot check
+
+# Create backup before making changes
+dot backup
+
+# Restore from backup if needed
+dot restore
+
+# Preview changes without applying them
+dot --dry-run
+
+# Open dotfiles directory for editing
+dot --edit
+```
+
+### Manual Management
 This will symlink the appropriate files in `.dotfiles` to your home directory.
 Everything is configured and tweaked within `~/.dotfiles`.
 
 The main file you'll want to change right off the bat is `zsh/zshrc.symlink`,
 which sets up a few paths that'll be different on your particular machine.
 
-`dot` is a simple script that installs some dependencies, sets sane macOS
-defaults, and so on. Tweak this script, and occasionally run `dot` from
-time to time to keep your environment fresh and up-to-date. You can find
-this script in `bin/`.
+### Managing Applications
+Applications are now managed separately from command-line tools:
+
+- **`Brewfile`** - Command-line tools and development dependencies
+- **`Brewfile.casks`** - GUI applications (cask applications)
+- **`bin/mas-install`** - App Store applications
+
+To add/remove applications, edit the appropriate file for your needs.
 
 ## Notes about structure
 
