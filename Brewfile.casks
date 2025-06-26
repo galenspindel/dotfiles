@@ -3,6 +3,7 @@ cask_args appdir: '/Applications'
 # Applications - always ready to install
 cask '1password'
 cask 'alfred'
+cask 'claude'
 cask 'crossover'
 cask 'cursor'
 cask 'docker'
