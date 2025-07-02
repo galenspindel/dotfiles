@@ -10,52 +10,16 @@ set -e
 parentDirectory="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P)"
 dotfilesDirectory="$(cd "$( dirname "$parentDirectory" )" && pwd -P)"
 
-# Color output functions
-info () {
-  printf "\r  [ \033[00;34m..\033[0m ] $1\n"
-}
-
-success () {
-  printf "\r\033[2K  [ \033[00;32mOK\033[0m ] $1\n"
-}
-
-fail () {
-  printf "\r\033[2K  [\033[0;31mFAIL\033[0m] $1\n"
-  echo ''
-  echo "Update failed: $1"
-  echo "Check the error above and try again."
-  exit 1
-}
-
 displayUsageAndExit() {
 	echo "dot -- dotfiles management"
 	echo ""
-	echo "Usage: dot [command] [options]"
-	echo ""
-	echo "Commands:"
-	echo "  update        Update dotfiles and all software (default)"
-	echo "  apps          Update applications only (casks + App Store)"
-	echo "  dev           Update development environment (asdf, language versions, app configs)"
-	echo "  check         Check system status and validate setup"
-	echo "  backup        Create backup of current dotfiles"
-	echo "  restore       Restore from backup"
+	echo "Usage: dot [options]"
 	echo ""
 	echo "Options:"
 	echo "  -e, --edit    Open dotfiles directory for editing"
 	echo "  -h, --help    Show this help message and exit"
-	echo "  --dry-run     Preview changes without applying them"
-	echo ""
-	echo "Examples:"
-	echo "  dot              # Update everything"
-	echo "  dot apps         # Update apps only"
-	echo "  dot check        # Validate current setup"
-	echo "  dot --edit       # Open dotfiles for editing"
 	exit
 }
-
-# Parse command and options
-COMMAND="update"  # default command
-DRY_RUN=false
 
 while test $# -gt 0; do
 	case "$1" in
@@ -66,277 +30,36 @@ while test $# -gt 0; do
 			exec "$EDITOR" "$dotfilesDirectory"
 			exit
 			;;
-		"--dry-run")
-			DRY_RUN=true
-			shift
-			;;
-		"update"|"apps"|"dev"|"check"|"backup"|"restore")
-			COMMAND="$1"
-			shift
-			;;
 		*)
 			echo "Invalid option: $1"
 			displayUsageAndExit
 			;;
 	esac
+	shift
 done
 
 export ZSH=$HOME/.dotfiles
 
-dry_run () {
-  if [ "$DRY_RUN" = true ]; then
-    printf "\r  [ \033[0;35mDRY\033[0m ] $1\n"
-    return 0
-  else
-    return 1
-  fi
-}
-
-# Update dotfiles from git
-update_dotfiles() {
-  if dry_run "Would update dotfiles from git"; then
-    return 0
-  fi
-
-  # Verify we're in a git repository
-  if [ ! -d "$ZSH/.git" ]; then
-    fail "Not a git repository: $ZSH"
-  fi
-
-  info "Updating dotfiles from git"
-  if git -C "$ZSH" pull; then
-    success "Updated dotfiles"
-  else
-    fail "Failed to update dotfiles from git"
-  fi
-}
-
-# Update Homebrew and command-line packages
-update_homebrew() {
-  if dry_run "Would update Homebrew and command-line packages"; then
-    return 0
-  fi
-
-  # Install homebrew if needed
-  if [ -f "$ZSH/homebrew/install.sh" ]; then
-    info "Installing/updating Homebrew"
-    if "$ZSH/homebrew/install.sh" 2>&1; then
-      success "Homebrew ready"
-    else
-      fail "Failed to install/update Homebrew"
-    fi
-  else
-    fail "Homebrew install script not found"
-  fi
-
-  # Upgrade homebrew packages
-  if command -v brew >/dev/null 2>&1; then
-    info "Updating Homebrew packages"
-    if brew update && brew upgrade; then
-      success "Homebrew packages updated"
-    else
-      fail "Failed to update Homebrew packages"
-    fi
-  else
-    fail "Homebrew not found in PATH"
-  fi
-}
-
-# Update applications (casks + App Store)
-update_apps() {
-  if dry_run "Would update applications (casks + App Store)"; then
-    return 0
-  fi
-
-  info "Updating applications..."
-  
-  # Install any new cask applications from Brewfile.casks
-  if [ -f "$ZSH/Brewfile.casks" ]; then
-    info "Installing/updating cask applications from Brewfile.casks"
-    if brew bundle --file="$ZSH/Brewfile.casks"; then
-      success "Cask applications from Brewfile.casks processed"
-    else
-      warn "Some cask applications may have failed to install/update"
-    fi
-  else
-    warn "Brewfile.casks not found, skipping cask bundle"
-  fi
-  
-  # Update existing cask applications
-  if command -v brew >/dev/null 2>&1; then
-    info "Updating existing cask applications"
-    if brew upgrade --cask; then
-      success "Existing cask applications updated"
-    else
-      warn "Some existing cask applications may have failed to update"
-    fi
-  else
-    warn "Homebrew not found, skipping cask updates"
-  fi
-  
-  # Update App Store apps
-  if [ -f "$ZSH/bin/mas-install" ]; then
-    info "Updating App Store applications"
-    if "$ZSH/bin/mas-install" sync; then
-      success "App Store applications updated"
-    else
-      warn "Failed to update some App Store applications"
-    fi
-  else
-    warn "mas-install script not found, skipping App Store updates"
-  fi
-}
-
-# Update development tools
-update_dev_tools() {
-  if dry_run "Would update development tools and configurations"; then
-    return 0
-  fi
-
-  # Update asdf plugins first
-  if command -v asdf >/dev/null 2>&1; then
-    info "Updating asdf plugins"
-    if asdf plugin update --all; then
-      success "asdf plugins updated"
-    else
-      warn "Some asdf plugins may have failed to update"
-    fi
-  else
-    info "asdf not found, skipping plugin updates"
-  fi
-
-  # Run development tools installer (handles language versions, app configs, etc.)
-  if [ -f "$ZSH/script/install" ]; then
-    info "Updating development tools and configurations"
-    if "$ZSH/script/install"; then
-      success "Development tools and configurations updated"
-    else
-      fail "Failed to update development tools"
-    fi
-  else
-    warn "Development tools install script not found"
-  fi
-}
+# Update dotfiles themselves
+echo "› git pull"
+git -C $ZSH pull
 
 # Set macOS defaults
-set_macos_defaults() {
-  if [ "$(uname -s)" != "Darwin" ]; then
-    return 0
-  fi
+$ZSH/macos/set-defaults.sh
 
-  if dry_run "Would set macOS defaults"; then
-    return 0
-  fi
+# Install homebrew
+$ZSH/homebrew/install.sh 2>&1
 
-  if [ -f "$ZSH/macos/set-defaults.sh" ]; then
-    info "Setting macOS defaults"
-    if "$ZSH/macos/set-defaults.sh"; then
-      success "macOS defaults updated"
-    else
-      fail "Failed to set macOS defaults"
-    fi
-  else
-    info "macOS defaults script not found, skipping"
-  fi
-}
+# Upgrade homebrew
+echo "› brew update"
+brew update
 
-# Check system status and validate setup
-check_system() {
-  info "Checking system status..."
-  
-  if [ -f "$ZSH/script/validate-setup" ]; then
-    "$ZSH/script/validate-setup"
-  else
-    warn "Validation script not found"
-  fi
-}
+echo "› brew upgrade"
+brew upgrade
 
-# Create backup
-create_backup() {
-  if dry_run "Would create backup of current dotfiles"; then
-    return 0
-  fi
+echo "› asdf update"
+asdf plugin update --all
 
-  info "Creating backup..."
-  
-  backup_dir="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
-  
-  if mkdir -p "$backup_dir"; then
-    # Backup existing dotfiles
-    for src in $(find -H "$ZSH" -maxdepth 2 -name '*.symlink' -not -path '*.git*' 2>/dev/null); do
-      dst="$HOME/.$(basename "${src%.*}")"
-      if [ -f "$dst" ] && [ ! -L "$dst" ]; then
-        cp "$dst" "$backup_dir/$(basename "$dst")"
-      fi
-    done
-    success "Backup created in $backup_dir"
-  else
-    fail "Failed to create backup directory"
-  fi
-}
-
-# Restore from backup
-restore_from_backup() {
-  if [ -f "$ZSH/script/restore-backup" ]; then
-    "$ZSH/script/restore-backup"
-  else
-    fail "Restore script not found"
-  fi
-}
-
-# Execute commands based on the selected command
-case "$COMMAND" in
-  "update")
-    if [ "$DRY_RUN" = true ]; then
-      warn "DRY RUN MODE - No changes will be made"
-      echo
-    fi
-    
-    update_dotfiles
-    update_homebrew
-    update_apps
-    update_dev_tools
-    set_macos_defaults
-    
-    if [ "$DRY_RUN" = false ]; then
-      success "All updates completed successfully!"
-    fi
-    ;;
-  "apps")
-    if [ "$DRY_RUN" = true ]; then
-      warn "DRY RUN MODE - No changes will be made"
-      echo
-    fi
-    
-    update_apps
-    
-    if [ "$DRY_RUN" = false ]; then
-      success "Application updates completed!"
-    fi
-    ;;
-  "dev")
-    if [ "$DRY_RUN" = true ]; then
-      warn "DRY RUN MODE - No changes will be made" 
-      echo
-    fi
-    
-    update_dev_tools
-    
-    if [ "$DRY_RUN" = false ]; then
-      success "Development tools updated!"
-    fi
-    ;;
-  "check")
-    check_system
-    ;;
-  "backup")
-    create_backup
-    ;;
-  "restore")
-    restore_from_backup
-    ;;
-  *)
-    echo "Unknown command: $COMMAND"
-    displayUsageAndExit
-    ;;
-esac
+# Install software
+echo "› script/install"
+$ZSH/script/install
