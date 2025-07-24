@@ -19,6 +19,7 @@ brew 'yarn' # package manager
 # cask 'cursor'
 # cask 'docker'
 # cask 'firefox'
+# cask 'firefox@developer-edition'
 # cask 'font-fira-code-nerd-font'
 # cask 'google-drive'
 # cask 'granola'
