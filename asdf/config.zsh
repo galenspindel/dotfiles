@@ -1,8 +1,8 @@
 # asdf configuration
 if command -v asdf >/dev/null 2>&1; then
   # Set default tool versions (fallback if latest fails)
-  export ASDF_NODEJS_VERSION=latest
-  export ASDF_RUBY_VERSION=latest
+  export ASDF_NODEJS_VERSION="24.4.1"
+  export ASDF_RUBY_VERSION="3.4.5"
 
   # Source asdf
   . $(brew --prefix asdf)/libexec/asdf.sh
