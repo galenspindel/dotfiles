@@ -296,7 +296,8 @@ install_homebrew() {
   
   # Install Homebrew if needed
   if [ -f "$DOTFILES_ROOT/homebrew/install.sh" ]; then
-    "$DOTFILES_ROOT/homebrew/install.sh" 2>&1
+    # Source the install script to get brew in PATH
+    . "$DOTFILES_ROOT/homebrew/install.sh" 2>&1
   else
     fail "Homebrew install script not found"
   fi

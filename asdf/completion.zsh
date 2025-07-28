@@ -13,7 +13,7 @@ if command -v asdf >/dev/null 2>&1; then
   # Initialize completions (zsh only)
   if [ -n "$ZSH_VERSION" ]; then
     autoload -Uz compinit
-    compinit
+    compinit -u
   fi
 fi
 

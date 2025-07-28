@@ -1,8 +1,8 @@
 # asdf configuration
 if command -v asdf >/dev/null 2>&1; then
-  # Set default tool versions (fallback to specific versions if latest fails)
-  export ASDF_NODEJS_VERSION=24.2.0
-  export ASDF_RUBY_VERSION=3.4.4
+  # Set default tool versions (fallback if latest fails)
+  export ASDF_NODEJS_VERSION=latest
+  export ASDF_RUBY_VERSION=latest
 
   # Source asdf
   . $(brew --prefix asdf)/libexec/asdf.sh
@@ -16,18 +16,14 @@ if command -v asdf >/dev/null 2>&1; then
   asdf-install-all() {
     echo "Installing all global tools..."
     
-    # Try latest first, fallback to specific version
+    # Install latest versions
     echo "Installing Node.js..."
-    if ! asdf install nodejs latest 2>/dev/null; then
-      echo "Latest failed, installing Node.js $ASDF_NODEJS_VERSION"
-      asdf install nodejs $ASDF_NODEJS_VERSION
-    fi
+    asdf install nodejs latest
+    asdf set nodejs latest --home
     
     echo "Installing Ruby..."
-    if ! asdf install ruby latest 2>/dev/null; then
-      echo "Latest failed, installing Ruby $ASDF_RUBY_VERSION"
-      asdf install ruby $ASDF_RUBY_VERSION
-    fi
+    asdf install ruby latest
+    asdf set ruby latest --home
   }
 
   asdf-update-all() {
@@ -64,17 +60,11 @@ if command -v asdf >/dev/null 2>&1; then
     local project_type=$1
     case $project_type in
       "node"|"typescript")
-        if ! asdf local nodejs latest 2>/dev/null; then
-          echo "Using fallback Node.js version $ASDF_NODEJS_VERSION"
-          asdf local nodejs $ASDF_NODEJS_VERSION
-        fi
+        asdf local nodejs latest
         npm install
         ;;
       "ruby"|"rails")
-        if ! asdf local ruby latest 2>/dev/null; then
-          echo "Using fallback Ruby version $ASDF_RUBY_VERSION"
-          asdf local ruby $ASDF_RUBY_VERSION
-        fi
+        asdf local ruby latest
         gem install bundler
         bundle install
         ;;
