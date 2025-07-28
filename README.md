@@ -40,6 +40,7 @@ script/validate-setup
 ## Post-Setup
 - Enable FiraCode Nerd Font in iTerm2 `Preferences -> Profiles -> Text`
 - Enable FiraCode Nerd Font in Cursor
+- Choose desired prompt from `zsh/prompt.zsh`
 
 ## Troubleshooting
 If something goes wrong:
