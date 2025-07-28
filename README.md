@@ -4,15 +4,9 @@ Forked from https://github.com/holman/dotfiles
 
 Should be able to set up a brand new machine from scratch (mostly)
 
-## Brand New Machine setup
-- Make sure you're logged into the App Store
-- Install xcode `xcode-select --install`
-- Install homebrew `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-- Check `zsh/zshrc.symlink`, to make sure the paths are correct for this new machine
-
-### Unified Setup (Recommended)
+## Unified Setup (Recommended)
 ```sh
-git clone https://github.com/holman/dotfiles.git ~/.dotfiles
+git clone https://github.com/galenspindel/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Interactive setup (asks about each component)
@@ -31,7 +25,7 @@ cd ~/.dotfiles
 ./setup.sh --dry-run
 ```
 
-### Manual Setup (Legacy)
+## Manual Setup (Legacy)
 ```sh
 # Optional: Check prerequisites first
 script/check-prerequisites
@@ -43,11 +37,11 @@ script/bootstrap
 script/validate-setup
 ```
 
-### Post-Setup
+## Post-Setup
 - Enable FiraCode Nerd Font in iTerm2 `Preferences -> Profiles -> Text`
 - Enable FiraCode Nerd Font in Cursor
 
-### Troubleshooting
+## Troubleshooting
 If something goes wrong:
 - Run `script/check-prerequisites` to verify your system
 - Run `script/validate-setup` to check what's broken
@@ -55,7 +49,7 @@ If something goes wrong:
 
 ## Keeping Things Updated
 
-### Using the Enhanced `dot` Command
+## Using the Enhanced `dot` Command
 The `dot` command has been enhanced with subcommands for targeted updates:
 
 ```sh
@@ -84,14 +78,14 @@ dot --dry-run
 dot --edit
 ```
 
-### Manual Management
+## Manual Management
 This will symlink the appropriate files in `.dotfiles` to your home directory.
 Everything is configured and tweaked within `~/.dotfiles`.
 
 The main file you'll want to change right off the bat is `zsh/zshrc.symlink`,
 which sets up a few paths that'll be different on your particular machine.
 
-### Managing Applications
+## Managing Applications
 Applications are now managed separately from command-line tools:
 
 - **`Brewfile`** - Command-line tools and development dependencies

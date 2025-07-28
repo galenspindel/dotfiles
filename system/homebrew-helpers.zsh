@@ -24,7 +24,5 @@ is_intel_mac() {
   [ "$(uname -m)" = "x86_64" ]
 }
 
-# Export for use in other scripts
-export -f get_homebrew_prefix
-export -f is_apple_silicon
-export -f is_intel_mac
+# Functions are automatically available in zsh when sourced
+# No need to export them
