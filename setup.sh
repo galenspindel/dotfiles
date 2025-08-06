@@ -88,7 +88,7 @@ SETUP LEVELS:
     Full:        Everything (CLI tools, apps, dev environment, macOS defaults)
 
 DEVELOPMENT TOOLS INCLUDE:
-    - asdf plugins and language versions (Node.js, Ruby)
+    - mise plugins and language versions (Node.js, Ruby)
     - Application configurations (Cursor IDE, Claude CLI)
     - Development environment setup
 EOF
@@ -295,12 +295,12 @@ install_homebrew() {
   info "Installing Homebrew and command-line tools..."
   
   # Install Homebrew if needed
-  if [ -f "$DOTFILES_ROOT/homebrew/install.sh" ]; then
+  # if [ -f "$DOTFILES_ROOT/homebrew/install.sh" ]; then
     # Source the install script to get brew in PATH
-    . "$DOTFILES_ROOT/homebrew/install.sh" 2>&1
-  else
-    fail "Homebrew install script not found"
-  fi
+  #  . "$DOTFILES_ROOT/homebrew/install.sh" 2>&1
+  # else
+  #  fail "Homebrew install script not found"
+  # fi
   
   # Install command-line packages from main Brewfile
   if [ -f "$DOTFILES_ROOT/Brewfile" ]; then
@@ -348,7 +348,7 @@ install_apps() {
 
 # Install development tools
 install_dev_tools() {
-  if dry_run "Would install development tools (asdf, language versions, app configs)"; then
+  if dry_run "Would install development tools (mise, language versions, app configs)"; then
     return 0
   fi
 
@@ -402,7 +402,7 @@ interactive_setup() {
     SKIP_APPS=true
   fi
   
-  user 'Install development tools (asdf, Node.js, Ruby, etc.)? [Y/n]'
+  user 'Install development tools (mise, Node.js, Ruby, etc.)? [Y/n]'
   read -n 1 install_dev
   echo
   if [[ "$install_dev" =~ ^[Nn]$ ]]; then

@@ -1,0 +1,17 @@
+# mise global configuration
+# This file will be symlinked to ~/.config/mise/config.toml
+
+[settings]
+# Enable experimental features
+experimental = true
+
+# Automatically install missing tools
+auto_install = true
+
+# Show progress bars
+verbose = false
+
+# Set global tool versions
+[tools]
+node = "24.4.1"
+ruby = "3.4.5"

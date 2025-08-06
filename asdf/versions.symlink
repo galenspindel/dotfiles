@@ -1,9 +1,0 @@
-# Default asdf tool versions
-# This file gets symlinked to ~/.tool-versions
-nodejs 24.4.1
-ruby 3.4.5
-# python latest
-# golang latest
-# rust latest
-# postgres latest
-# redis latest

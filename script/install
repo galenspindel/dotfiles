@@ -3,7 +3,7 @@
 # Install development tools and configure applications
 #
 # This script focuses on development environment setup:
-# - asdf plugins and language versions
+# - mise plugins and language versions
 # - Application configurations (Cursor, Claude CLI)
 # - Development dependencies
 #
